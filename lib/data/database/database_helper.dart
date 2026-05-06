@@ -3,7 +3,7 @@ import 'package:path/path.dart';
 
 class DatabaseHelper {
   static const _dbName = 'location_besty.db';
-  static const _dbVersion = 1;
+  static const _dbVersion = 2;
   static const table = 'locations';
 
   Database? _db;
@@ -15,7 +15,12 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     final dbPath = join(await getDatabasesPath(), _dbName);
-    return openDatabase(dbPath, version: _dbVersion, onCreate: _onCreate);
+    return openDatabase(
+      dbPath,
+      version: _dbVersion,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -27,10 +32,17 @@ class DatabaseHelper {
         latitude    REAL    NOT NULL,
         longitude   REAL    NOT NULL,
         photo_path  TEXT,
+        place_name  TEXT,
         created_at  TEXT    NOT NULL,
         updated_at  TEXT    NOT NULL
       )
     ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE $table ADD COLUMN place_name TEXT');
+    }
   }
 
   Future<int> insert(Map<String, dynamic> data) async {

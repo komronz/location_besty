@@ -59,5 +59,12 @@
 	<string>Location Besty needs access to your photo library to attach images to your saved places.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Location Besty may save photos to your library.</string>
+
+	<!-- url_launcher: allow opening Google Maps -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+		<string>comgooglemaps</string>
+	</array>
 </dict>
 </plist>

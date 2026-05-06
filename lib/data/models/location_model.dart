@@ -7,6 +7,7 @@ class LocationModel {
   final double latitude;
   final double longitude;
   final String? photoPath;
+  final String? placeName;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -17,6 +18,7 @@ class LocationModel {
     required this.latitude,
     required this.longitude,
     this.photoPath,
+    this.placeName,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -29,6 +31,7 @@ class LocationModel {
       latitude: (map['latitude'] as num).toDouble(),
       longitude: (map['longitude'] as num).toDouble(),
       photoPath: map['photo_path'] as String?,
+      placeName: map['place_name'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );
@@ -42,6 +45,7 @@ class LocationModel {
       'latitude': latitude,
       'longitude': longitude,
       'photo_path': photoPath,
+      'place_name': placeName,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -54,6 +58,7 @@ class LocationModel {
         latitude: latitude,
         longitude: longitude,
         photoPath: photoPath,
+        placeName: placeName,
         createdAt: createdAt,
         updatedAt: updatedAt,
       );
@@ -65,6 +70,7 @@ class LocationModel {
         latitude: entity.latitude,
         longitude: entity.longitude,
         photoPath: entity.photoPath,
+        placeName: entity.placeName,
         createdAt: entity.createdAt ?? DateTime.now(),
         updatedAt: entity.updatedAt ?? DateTime.now(),
       );

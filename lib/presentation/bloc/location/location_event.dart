@@ -13,6 +13,7 @@ class LocationEvent with _$LocationEvent {
     required double latitude,
     required double longitude,
     String? photoPath,
+    String? placeName,
   }) = AddLocationEvent;
 
   const factory LocationEvent.updateLocation(Location location) =

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/entities/location.dart';
+import '../pages/photo_viewer/photo_viewer_page.dart';
 
 class LocationCard extends StatelessWidget {
   final Location location;
@@ -50,7 +51,28 @@ class LocationCard extends StatelessWidget {
                           letterSpacing: -0.2,
                         ),
                       ),
-                      if (location.description?.isNotEmpty == true) ...[
+                      if (location.placeName?.isNotEmpty == true) ...[
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            const Icon(Icons.place_rounded,
+                                size: 11, color: AppTheme.primary),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child: Text(
+                                location.placeName!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ] else if (location.description?.isNotEmpty == true) ...[
                         const SizedBox(height: 3),
                         Text(
                           location.description!,
@@ -95,18 +117,35 @@ class _Thumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
+    final hasPhoto = location.photoPath != null;
+    final thumbnail = ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: SizedBox(
         width: 72,
         height: 72,
-        child: location.photoPath != null
+        child: hasPhoto
             ? Image.file(
                 File(location.photoPath!),
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => _gradient(),
               )
             : _gradient(),
+      ),
+    );
+
+    if (!hasPhoto) return thumbnail;
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        PhotoViewerPage.route(
+          location.photoPath!,
+          heroTag: 'photo_card_${location.id}',
+        ),
+      ),
+      child: Hero(
+        tag: 'photo_card_${location.id}',
+        child: thumbnail,
       ),
     );
   }

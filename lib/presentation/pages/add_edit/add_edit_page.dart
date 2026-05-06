@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geocoding/geocoding.dart' hide Location;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -32,6 +33,8 @@ class _AddEditPageState extends State<AddEditPage> {
   String? _photoPath;
   late double _lat;
   late double _lng;
+  String? _placeName;
+  bool _geocoding = false;
   bool _saving = false;
 
   bool get _isEdit => widget.location != null;
@@ -45,6 +48,8 @@ class _AddEditPageState extends State<AddEditPage> {
     _photoPath = loc?.photoPath;
     _lat = loc?.latitude ?? widget.initialLatitude ?? 41.2995;
     _lng = loc?.longitude ?? widget.initialLongitude ?? 69.2401;
+    _placeName = loc?.placeName;
+    if (_placeName == null) _reverseGeocode(_lat, _lng);
   }
 
   @override
@@ -52,6 +57,23 @@ class _AddEditPageState extends State<AddEditPage> {
     _name.dispose();
     _desc.dispose();
     super.dispose();
+  }
+
+  Future<void> _reverseGeocode(double lat, double lng) async {
+    setState(() => _geocoding = true);
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isNotEmpty && mounted) {
+        final p = placemarks.first;
+        final parts = <String>[
+          if (p.street?.isNotEmpty == true) p.street!,
+          if (p.locality?.isNotEmpty == true) p.locality!,
+          if (p.country?.isNotEmpty == true) p.country!,
+        ];
+        setState(() => _placeName = parts.isNotEmpty ? parts.join(', ') : null);
+      }
+    } catch (_) {}
+    if (mounted) setState(() => _geocoding = false);
   }
 
   @override
@@ -111,8 +133,16 @@ class _AddEditPageState extends State<AddEditPage> {
               child: _MapPicker(
                 lat: _lat,
                 lng: _lng,
-                onChanged: (lat, lng) =>
-                    setState(() { _lat = lat; _lng = lng; }),
+                placeName: _placeName,
+                geocodingInProgress: _geocoding,
+                onChanged: (lat, lng) {
+                  setState(() {
+                    _lat = lat;
+                    _lng = lng;
+                    _placeName = null;
+                  });
+                  _reverseGeocode(lat, lng);
+                },
               ),
             ),
             const SizedBox(height: 8),
@@ -132,7 +162,6 @@ class _AddEditPageState extends State<AddEditPage> {
     setState(() => _saving = true);
 
     final bloc = context.read<LocationBloc>();
-    // _photoPath is already in Documents dir (copied at pick time)
     final name = _name.text.trim();
     final desc = _desc.text.trim().isEmpty ? null : _desc.text.trim();
 
@@ -144,6 +173,7 @@ class _AddEditPageState extends State<AddEditPage> {
           latitude: _lat,
           longitude: _lng,
           photoPath: _photoPath,
+          placeName: _placeName,
           updatedAt: DateTime.now(),
         ),
       ));
@@ -154,12 +184,12 @@ class _AddEditPageState extends State<AddEditPage> {
         latitude: _lat,
         longitude: _lng,
         photoPath: _photoPath,
+        placeName: _placeName,
       ));
     }
 
     if (mounted) Navigator.pop(context);
   }
-
 }
 
 // ---------------------------------------------------------------------------
@@ -387,7 +417,8 @@ class _PhotoPicker extends StatelessWidget {
             const SizedBox(height: 16),
             const Text('Add Photo',
                 style: TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
                     color: AppTheme.textPrimary)),
             const SizedBox(height: 16),
             _PickerOption(
@@ -415,7 +446,6 @@ class _PhotoPicker extends StatelessWidget {
     final tmp = File(picked.path);
     if (!await tmp.exists() || await tmp.length() == 0) return;
 
-    // Copy immediately to Documents so the path survives app restarts
     try {
       final dir = await getApplicationDocumentsDirectory();
       final dest =
@@ -423,7 +453,6 @@ class _PhotoPicker extends StatelessWidget {
       await tmp.copy(dest);
       onChanged(dest);
     } catch (_) {
-      // fallback: use the temp path for this session
       onChanged(picked.path);
     }
   }
@@ -510,10 +539,17 @@ class _PickerOption extends StatelessWidget {
 class _MapPicker extends StatefulWidget {
   final double lat;
   final double lng;
+  final String? placeName;
+  final bool geocodingInProgress;
   final void Function(double lat, double lng) onChanged;
 
-  const _MapPicker(
-      {required this.lat, required this.lng, required this.onChanged});
+  const _MapPicker({
+    required this.lat,
+    required this.lng,
+    required this.placeName,
+    required this.geocodingInProgress,
+    required this.onChanged,
+  });
 
   @override
   State<_MapPicker> createState() => _MapPickerState();
@@ -527,6 +563,50 @@ class _MapPickerState extends State<_MapPicker> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Place name / geocoding indicator
+        if (widget.geocodingInProgress)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 1.5, color: AppTheme.primary),
+                ),
+                SizedBox(width: 6),
+                Text('Looking up address…',
+                    style: TextStyle(
+                        fontSize: 12, color: AppTheme.textSecondary)),
+              ],
+            ),
+          )
+        else if (widget.placeName != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.place_rounded,
+                    size: 13, color: AppTheme.primary),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    widget.placeName!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        // Coordinate chip
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
@@ -554,8 +634,8 @@ class _MapPickerState extends State<_MapPicker> {
           child: SizedBox(
             height: 180,
             child: GoogleMap(
-              initialCameraPosition:
-                  CameraPosition(target: LatLng(widget.lat, widget.lng), zoom: 15),
+              initialCameraPosition: CameraPosition(
+                  target: LatLng(widget.lat, widget.lng), zoom: 15),
               onMapCreated: (c) => _ctrl = c,
               markers: {
                 Marker(

@@ -20,7 +20,7 @@ mixin _$LocationEvent {
   TResult when<TResult extends Object?>({
     required TResult Function() loadLocations,
     required TResult Function(String name, String? description, double latitude,
-            double longitude, String? photoPath)
+            double longitude, String? photoPath, String? placeName)
         addLocation,
     required TResult Function(Location location) updateLocation,
     required TResult Function(int id) deleteLocation,
@@ -30,7 +30,7 @@ mixin _$LocationEvent {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? loadLocations,
     TResult? Function(String name, String? description, double latitude,
-            double longitude, String? photoPath)?
+            double longitude, String? photoPath, String? placeName)?
         addLocation,
     TResult? Function(Location location)? updateLocation,
     TResult? Function(int id)? deleteLocation,
@@ -40,7 +40,7 @@ mixin _$LocationEvent {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? loadLocations,
     TResult Function(String name, String? description, double latitude,
-            double longitude, String? photoPath)?
+            double longitude, String? photoPath, String? placeName)?
         addLocation,
     TResult Function(Location location)? updateLocation,
     TResult Function(int id)? deleteLocation,
@@ -138,7 +138,7 @@ class _$LoadLocationsEventImpl implements LoadLocationsEvent {
   TResult when<TResult extends Object?>({
     required TResult Function() loadLocations,
     required TResult Function(String name, String? description, double latitude,
-            double longitude, String? photoPath)
+            double longitude, String? photoPath, String? placeName)
         addLocation,
     required TResult Function(Location location) updateLocation,
     required TResult Function(int id) deleteLocation,
@@ -151,7 +151,7 @@ class _$LoadLocationsEventImpl implements LoadLocationsEvent {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? loadLocations,
     TResult? Function(String name, String? description, double latitude,
-            double longitude, String? photoPath)?
+            double longitude, String? photoPath, String? placeName)?
         addLocation,
     TResult? Function(Location location)? updateLocation,
     TResult? Function(int id)? deleteLocation,
@@ -164,7 +164,7 @@ class _$LoadLocationsEventImpl implements LoadLocationsEvent {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? loadLocations,
     TResult Function(String name, String? description, double latitude,
-            double longitude, String? photoPath)?
+            double longitude, String? photoPath, String? placeName)?
         addLocation,
     TResult Function(Location location)? updateLocation,
     TResult Function(int id)? deleteLocation,
@@ -229,7 +229,8 @@ abstract class _$$AddLocationEventImplCopyWith<$Res> {
       String? description,
       double latitude,
       double longitude,
-      String? photoPath});
+      String? photoPath,
+      String? placeName});
 }
 
 /// @nodoc
@@ -250,6 +251,7 @@ class __$$AddLocationEventImplCopyWithImpl<$Res>
     Object? latitude = null,
     Object? longitude = null,
     Object? photoPath = freezed,
+    Object? placeName = freezed,
   }) {
     return _then(_$AddLocationEventImpl(
       name: null == name
@@ -272,6 +274,10 @@ class __$$AddLocationEventImplCopyWithImpl<$Res>
           ? _value.photoPath
           : photoPath // ignore: cast_nullable_to_non_nullable
               as String?,
+      placeName: freezed == placeName
+          ? _value.placeName
+          : placeName // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -284,7 +290,8 @@ class _$AddLocationEventImpl implements AddLocationEvent {
       this.description,
       required this.latitude,
       required this.longitude,
-      this.photoPath});
+      this.photoPath,
+      this.placeName});
 
   @override
   final String name;
@@ -296,10 +303,12 @@ class _$AddLocationEventImpl implements AddLocationEvent {
   final double longitude;
   @override
   final String? photoPath;
+  @override
+  final String? placeName;
 
   @override
   String toString() {
-    return 'LocationEvent.addLocation(name: $name, description: $description, latitude: $latitude, longitude: $longitude, photoPath: $photoPath)';
+    return 'LocationEvent.addLocation(name: $name, description: $description, latitude: $latitude, longitude: $longitude, photoPath: $photoPath, placeName: $placeName)';
   }
 
   @override
@@ -315,12 +324,14 @@ class _$AddLocationEventImpl implements AddLocationEvent {
             (identical(other.longitude, longitude) ||
                 other.longitude == longitude) &&
             (identical(other.photoPath, photoPath) ||
-                other.photoPath == photoPath));
+                other.photoPath == photoPath) &&
+            (identical(other.placeName, placeName) ||
+                other.placeName == placeName));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType, name, description, latitude, longitude, photoPath);
+  int get hashCode => Object.hash(runtimeType, name, description, latitude,
+      longitude, photoPath, placeName);
 
   /// Create a copy of LocationEvent
   /// with the given fields replaced by the non-null parameter values.
@@ -336,12 +347,13 @@ class _$AddLocationEventImpl implements AddLocationEvent {
   TResult when<TResult extends Object?>({
     required TResult Function() loadLocations,
     required TResult Function(String name, String? description, double latitude,
-            double longitude, String? photoPath)
+            double longitude, String? photoPath, String? placeName)
         addLocation,
     required TResult Function(Location location) updateLocation,
     required TResult Function(int id) deleteLocation,
   }) {
-    return addLocation(name, description, latitude, longitude, photoPath);
+    return addLocation(
+        name, description, latitude, longitude, photoPath, placeName);
   }
 
   @override
@@ -349,12 +361,13 @@ class _$AddLocationEventImpl implements AddLocationEvent {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? loadLocations,
     TResult? Function(String name, String? description, double latitude,
-            double longitude, String? photoPath)?
+            double longitude, String? photoPath, String? placeName)?
         addLocation,
     TResult? Function(Location location)? updateLocation,
     TResult? Function(int id)? deleteLocation,
   }) {
-    return addLocation?.call(name, description, latitude, longitude, photoPath);
+    return addLocation?.call(
+        name, description, latitude, longitude, photoPath, placeName);
   }
 
   @override
@@ -362,14 +375,15 @@ class _$AddLocationEventImpl implements AddLocationEvent {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? loadLocations,
     TResult Function(String name, String? description, double latitude,
-            double longitude, String? photoPath)?
+            double longitude, String? photoPath, String? placeName)?
         addLocation,
     TResult Function(Location location)? updateLocation,
     TResult Function(int id)? deleteLocation,
     required TResult orElse(),
   }) {
     if (addLocation != null) {
-      return addLocation(name, description, latitude, longitude, photoPath);
+      return addLocation(
+          name, description, latitude, longitude, photoPath, placeName);
     }
     return orElse();
   }
@@ -418,13 +432,15 @@ abstract class AddLocationEvent implements LocationEvent {
       final String? description,
       required final double latitude,
       required final double longitude,
-      final String? photoPath}) = _$AddLocationEventImpl;
+      final String? photoPath,
+      final String? placeName}) = _$AddLocationEventImpl;
 
   String get name;
   String? get description;
   double get latitude;
   double get longitude;
   String? get photoPath;
+  String? get placeName;
 
   /// Create a copy of LocationEvent
   /// with the given fields replaced by the non-null parameter values.
@@ -517,7 +533,7 @@ class _$UpdateLocationEventImpl implements UpdateLocationEvent {
   TResult when<TResult extends Object?>({
     required TResult Function() loadLocations,
     required TResult Function(String name, String? description, double latitude,
-            double longitude, String? photoPath)
+            double longitude, String? photoPath, String? placeName)
         addLocation,
     required TResult Function(Location location) updateLocation,
     required TResult Function(int id) deleteLocation,
@@ -530,7 +546,7 @@ class _$UpdateLocationEventImpl implements UpdateLocationEvent {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? loadLocations,
     TResult? Function(String name, String? description, double latitude,
-            double longitude, String? photoPath)?
+            double longitude, String? photoPath, String? placeName)?
         addLocation,
     TResult? Function(Location location)? updateLocation,
     TResult? Function(int id)? deleteLocation,
@@ -543,7 +559,7 @@ class _$UpdateLocationEventImpl implements UpdateLocationEvent {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? loadLocations,
     TResult Function(String name, String? description, double latitude,
-            double longitude, String? photoPath)?
+            double longitude, String? photoPath, String? placeName)?
         addLocation,
     TResult Function(Location location)? updateLocation,
     TResult Function(int id)? deleteLocation,
@@ -677,7 +693,7 @@ class _$DeleteLocationEventImpl implements DeleteLocationEvent {
   TResult when<TResult extends Object?>({
     required TResult Function() loadLocations,
     required TResult Function(String name, String? description, double latitude,
-            double longitude, String? photoPath)
+            double longitude, String? photoPath, String? placeName)
         addLocation,
     required TResult Function(Location location) updateLocation,
     required TResult Function(int id) deleteLocation,
@@ -690,7 +706,7 @@ class _$DeleteLocationEventImpl implements DeleteLocationEvent {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? loadLocations,
     TResult? Function(String name, String? description, double latitude,
-            double longitude, String? photoPath)?
+            double longitude, String? photoPath, String? placeName)?
         addLocation,
     TResult? Function(Location location)? updateLocation,
     TResult? Function(int id)? deleteLocation,
@@ -703,7 +719,7 @@ class _$DeleteLocationEventImpl implements DeleteLocationEvent {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? loadLocations,
     TResult Function(String name, String? description, double latitude,
-            double longitude, String? photoPath)?
+            double longitude, String? photoPath, String? placeName)?
         addLocation,
     TResult Function(Location location)? updateLocation,
     TResult Function(int id)? deleteLocation,

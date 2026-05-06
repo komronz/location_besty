@@ -2,11 +2,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/entities/location.dart';
 import '../../bloc/location/location_bloc.dart';
 import '../../bloc/location/location_event.dart';
 import '../add_edit/add_edit_page.dart';
+import '../photo_viewer/photo_viewer_page.dart';
 
 class DetailPage extends StatelessWidget {
   final Location location;
@@ -40,17 +42,46 @@ class DetailPage extends StatelessWidget {
                     ),
                   _InfoCard(
                     icon: Icons.location_on_rounded,
-                    title: 'Coordinates',
-                    child: Row(
+                    title: 'Location',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _CoordBadge(
-                          label: 'LAT',
-                          value: location.latitude.toStringAsFixed(6),
-                        ),
-                        const SizedBox(width: 10),
-                        _CoordBadge(
-                          label: 'LNG',
-                          value: location.longitude.toStringAsFixed(6),
+                        // Place name
+                        if (location.placeName?.isNotEmpty == true) ...[
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.place_rounded,
+                                  size: 15, color: AppTheme.primary),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  location.placeName!,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textPrimary,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                        ],
+                        // Coordinates
+                        Row(
+                          children: [
+                            _CoordBadge(
+                              label: 'LAT',
+                              value: location.latitude.toStringAsFixed(6),
+                            ),
+                            const SizedBox(width: 10),
+                            _CoordBadge(
+                              label: 'LNG',
+                              value: location.longitude.toStringAsFixed(6),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -185,14 +216,26 @@ class _HeroAppBar extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             hasPhoto
-                ? Image.file(
-                    File(location.photoPath!),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      decoration:
-                          const BoxDecoration(gradient: AppTheme.gradient),
-                      child: const Icon(Icons.location_on_rounded,
-                          size: 80, color: Colors.white24),
+                ? GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      PhotoViewerPage.route(
+                        location.photoPath!,
+                        heroTag: 'photo_detail_${location.id}',
+                      ),
+                    ),
+                    child: Hero(
+                      tag: 'photo_detail_${location.id}',
+                      child: Image.file(
+                        File(location.photoPath!),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          decoration:
+                              const BoxDecoration(gradient: AppTheme.gradient),
+                          child: const Icon(Icons.location_on_rounded,
+                              size: 80, color: Colors.white24),
+                        ),
+                      ),
                     ),
                   )
                 : Container(
@@ -200,7 +243,6 @@ class _HeroAppBar extends StatelessWidget {
                     child: const Icon(Icons.location_on_rounded,
                         size: 80, color: Colors.white24),
                   ),
-            // Gradient overlay for readability
             DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -318,35 +360,43 @@ class _ActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          flex: 2,
-          child: _GradientBtn(
-            icon: Icons.edit_rounded,
-            label: 'Edit',
-            onTap: () => Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (_, a, b) => AddEditPage(location: location),
-                transitionsBuilder: (_, a, __, child) => SlideTransition(
-                  position: Tween(
-                    begin: const Offset(1, 0),
-                    end: Offset.zero,
-                  ).animate(CurvedAnimation(
-                      parent: a, curve: Curves.easeOutCubic)),
-                  child: child,
+        // Get Directions — primary full-width button
+        _DirectionsBtn(location: location),
+        const SizedBox(height: 12),
+        // Edit + Delete row
+        Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: _GradientBtn(
+                icon: Icons.edit_rounded,
+                label: 'Edit',
+                onTap: () => Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (_, a, b) => AddEditPage(location: location),
+                    transitionsBuilder: (_, a, __, child) => SlideTransition(
+                      position: Tween(
+                        begin: const Offset(1, 0),
+                        end: Offset.zero,
+                      ).animate(CurvedAnimation(
+                          parent: a, curve: Curves.easeOutCubic)),
+                      child: child,
+                    ),
+                    transitionDuration: const Duration(milliseconds: 300),
+                  ),
                 ),
-                transitionDuration: const Duration(milliseconds: 300),
               ),
             ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _DeleteBtn(
-            onTap: () => _confirmDelete(context),
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _DeleteBtn(
+                onTap: () => _confirmDelete(context),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -382,6 +432,68 @@ class _ActionButtons extends StatelessWidget {
             child: const Text('Delete'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DirectionsBtn extends StatelessWidget {
+  final Location location;
+  const _DirectionsBtn({required this.location});
+
+  Future<void> _openDirections() async {
+    final lat = location.latitude;
+    final lng = location.longitude;
+    final name = Uri.encodeComponent(location.name);
+    final uri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&destination_place_id=$name',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 54,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF00C853), Color(0xFF69F0AE)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF00C853).withValues(alpha: 0.35),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _openDirections,
+          borderRadius: BorderRadius.circular(16),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.navigation_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Get Directions',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

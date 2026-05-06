@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
+import '../chat/chat_page.dart';
 import '../map/map_page.dart';
 import '../locations_list/list_page.dart';
 
@@ -13,7 +14,11 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _index = 0;
 
-  static const _pages = <Widget>[MapPage(), LocationsListPage()];
+  static const _pages = <Widget>[
+    MapPage(),
+    LocationsListPage(),
+    ChatPage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -39,16 +44,30 @@ class _HomePageState extends State<HomePage> {
           destinations: [
             NavigationDestination(
               icon: Icon(Icons.map_outlined,
-                  color: _index == 0 ? AppTheme.primary : AppTheme.textSecondary),
-              selectedIcon: const Icon(Icons.map_rounded, color: AppTheme.primary),
+                  color: _index == 0
+                      ? AppTheme.primary
+                      : AppTheme.textSecondary),
+              selectedIcon:
+                  const Icon(Icons.map_rounded, color: AppTheme.primary),
               label: 'Map',
             ),
             NavigationDestination(
               icon: Icon(Icons.bookmark_border_rounded,
-                  color: _index == 1 ? AppTheme.primary : AppTheme.textSecondary),
+                  color: _index == 1
+                      ? AppTheme.primary
+                      : AppTheme.textSecondary),
               selectedIcon: const Icon(Icons.bookmark_rounded,
                   color: AppTheme.primary),
               label: 'Saved',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.auto_awesome_outlined,
+                  color: _index == 2
+                      ? AppTheme.primary
+                      : AppTheme.textSecondary),
+              selectedIcon: const Icon(Icons.auto_awesome_rounded,
+                  color: AppTheme.primary),
+              label: 'AI Chat',
             ),
           ],
         ),

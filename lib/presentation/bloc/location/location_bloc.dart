@@ -39,6 +39,7 @@ class LocationBloc extends Bloc<LocationEvent, LocationState> {
         latitude: event.latitude,
         longitude: event.longitude,
         photoPath: event.photoPath,
+        placeName: event.placeName,
         createdAt: now,
         updatedAt: now,
       ));

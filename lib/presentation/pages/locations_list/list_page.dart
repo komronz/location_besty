@@ -8,31 +8,69 @@ import '../../bloc/location/location_state.dart';
 import '../../widgets/location_card.dart';
 import '../detail/detail_page.dart';
 
-class LocationsListPage extends StatelessWidget {
+class LocationsListPage extends StatefulWidget {
   const LocationsListPage({super.key});
+
+  @override
+  State<LocationsListPage> createState() => _LocationsListPageState();
+}
+
+class _LocationsListPageState extends State<LocationsListPage> {
+  final _search = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  List<Location> _filter(List<Location> all) {
+    if (_query.isEmpty) return all;
+    final q = _query.toLowerCase();
+    return all.where((l) {
+      return l.name.toLowerCase().contains(q) ||
+          (l.placeName?.toLowerCase().contains(q) ?? false) ||
+          (l.description?.toLowerCase().contains(q) ?? false);
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LocationBloc, LocationState>(
       builder: (context, state) {
-        final locations = state.maybeMap(
+        final all = state.maybeMap(
           loaded: (s) => s.locations,
           orElse: () => <Location>[],
         );
+        final locations = _filter(all);
         final isLoading =
             state.maybeMap(loading: (_) => true, orElse: () => false);
 
         return CustomScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           slivers: [
-            _GradientHeader(count: locations.length),
+            _GradientHeader(
+              totalCount: all.length,
+              filteredCount: locations.length,
+              searchController: _search,
+              query: _query,
+              onQueryChanged: (v) => setState(() => _query = v),
+              onClear: () {
+                _search.clear();
+                setState(() => _query = '');
+              },
+            ),
             if (isLoading)
               const SliverFillRemaining(
                 child: Center(
                   child: CircularProgressIndicator(color: AppTheme.primary),
                 ),
               )
-            else if (locations.isEmpty)
+            else if (all.isEmpty)
               const SliverFillRemaining(child: _EmptyState())
+            else if (locations.isEmpty)
+              SliverFillRemaining(child: _NoResults(query: _query))
             else
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -54,10 +92,7 @@ class LocationsListPage extends StatelessWidget {
   }
 
   void _openDetail(BuildContext context, Location loc) {
-    Navigator.push(
-      context,
-      _slide(DetailPage(location: loc)),
-    );
+    Navigator.push(context, _slide(DetailPage(location: loc)));
   }
 
   void _confirmDelete(BuildContext context, Location loc) {
@@ -79,8 +114,21 @@ class LocationsListPage extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _GradientHeader extends StatelessWidget {
-  final int count;
-  const _GradientHeader({required this.count});
+  final int totalCount;
+  final int filteredCount;
+  final TextEditingController searchController;
+  final String query;
+  final ValueChanged<String> onQueryChanged;
+  final VoidCallback onClear;
+
+  const _GradientHeader({
+    required this.totalCount,
+    required this.filteredCount,
+    required this.searchController,
+    required this.query,
+    required this.onQueryChanged,
+    required this.onClear,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +139,7 @@ class _GradientHeader extends StatelessWidget {
           gradient: AppTheme.gradient,
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
         ),
-        padding: EdgeInsets.fromLTRB(24, top + 20, 24, 28),
+        padding: EdgeInsets.fromLTRB(24, top + 20, 24, 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -106,11 +154,53 @@ class _GradientHeader extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '$count ${count == 1 ? 'location' : 'locations'} saved',
+              query.isNotEmpty
+                  ? '$filteredCount of $totalCount ${totalCount == 1 ? 'location' : 'locations'}'
+                  : '$totalCount ${totalCount == 1 ? 'location' : 'locations'} saved',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.75),
                 fontSize: 14,
-                fontWeight: FontWeight.w400,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              height: 46,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: searchController,
+                onChanged: onQueryChanged,
+                style: const TextStyle(
+                    color: AppTheme.textPrimary, fontSize: 14),
+                cursorColor: AppTheme.primary,
+                decoration: InputDecoration(
+                  hintText: 'Search places…',
+                  hintStyle: const TextStyle(
+                      color: AppTheme.textSecondary, fontSize: 14),
+                  prefixIcon: const Icon(Icons.search_rounded,
+                      color: AppTheme.primary, size: 20),
+                  suffixIcon: query.isNotEmpty
+                      ? GestureDetector(
+                          onTap: onClear,
+                          child: const Icon(Icons.close_rounded,
+                              color: AppTheme.textSecondary, size: 18),
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 12),
+                ),
               ),
             ),
           ],
@@ -166,6 +256,50 @@ class _EmptyState extends StatelessWidget {
                 color: AppTheme.textSecondary,
                 height: 1.5,
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NoResults extends StatelessWidget {
+  final String query;
+  const _NoResults({required this.query});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.search_off_rounded,
+                  color: AppTheme.primary, size: 38),
+            ),
+            const SizedBox(height: 20),
+            const Text('No matches found',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary)),
+            const SizedBox(height: 8),
+            Text(
+              'No saved places match "$query"',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textSecondary,
+                  height: 1.5),
             ),
           ],
         ),

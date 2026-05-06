@@ -11,6 +11,7 @@ class Location with _$Location {
     required double latitude,
     required double longitude,
     String? photoPath,
+    String? placeName,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) = _Location;

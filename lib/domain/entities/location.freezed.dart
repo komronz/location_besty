@@ -22,6 +22,7 @@ mixin _$Location {
   double get latitude => throw _privateConstructorUsedError;
   double get longitude => throw _privateConstructorUsedError;
   String? get photoPath => throw _privateConstructorUsedError;
+  String? get placeName => throw _privateConstructorUsedError;
   DateTime? get createdAt => throw _privateConstructorUsedError;
   DateTime? get updatedAt => throw _privateConstructorUsedError;
 
@@ -44,6 +45,7 @@ abstract class $LocationCopyWith<$Res> {
       double latitude,
       double longitude,
       String? photoPath,
+      String? placeName,
       DateTime? createdAt,
       DateTime? updatedAt});
 }
@@ -69,6 +71,7 @@ class _$LocationCopyWithImpl<$Res, $Val extends Location>
     Object? latitude = null,
     Object? longitude = null,
     Object? photoPath = freezed,
+    Object? placeName = freezed,
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
   }) {
@@ -97,6 +100,10 @@ class _$LocationCopyWithImpl<$Res, $Val extends Location>
           ? _value.photoPath
           : photoPath // ignore: cast_nullable_to_non_nullable
               as String?,
+      placeName: freezed == placeName
+          ? _value.placeName
+          : placeName // ignore: cast_nullable_to_non_nullable
+              as String?,
       createdAt: freezed == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -124,6 +131,7 @@ abstract class _$$LocationImplCopyWith<$Res>
       double latitude,
       double longitude,
       String? photoPath,
+      String? placeName,
       DateTime? createdAt,
       DateTime? updatedAt});
 }
@@ -147,6 +155,7 @@ class __$$LocationImplCopyWithImpl<$Res>
     Object? latitude = null,
     Object? longitude = null,
     Object? photoPath = freezed,
+    Object? placeName = freezed,
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
   }) {
@@ -175,6 +184,10 @@ class __$$LocationImplCopyWithImpl<$Res>
           ? _value.photoPath
           : photoPath // ignore: cast_nullable_to_non_nullable
               as String?,
+      placeName: freezed == placeName
+          ? _value.placeName
+          : placeName // ignore: cast_nullable_to_non_nullable
+              as String?,
       createdAt: freezed == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -197,6 +210,7 @@ class _$LocationImpl implements _Location {
       required this.latitude,
       required this.longitude,
       this.photoPath,
+      this.placeName,
       this.createdAt,
       this.updatedAt});
 
@@ -213,13 +227,15 @@ class _$LocationImpl implements _Location {
   @override
   final String? photoPath;
   @override
+  final String? placeName;
+  @override
   final DateTime? createdAt;
   @override
   final DateTime? updatedAt;
 
   @override
   String toString() {
-    return 'Location(id: $id, name: $name, description: $description, latitude: $latitude, longitude: $longitude, photoPath: $photoPath, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Location(id: $id, name: $name, description: $description, latitude: $latitude, longitude: $longitude, photoPath: $photoPath, placeName: $placeName, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -237,6 +253,8 @@ class _$LocationImpl implements _Location {
                 other.longitude == longitude) &&
             (identical(other.photoPath, photoPath) ||
                 other.photoPath == photoPath) &&
+            (identical(other.placeName, placeName) ||
+                other.placeName == placeName) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -245,7 +263,7 @@ class _$LocationImpl implements _Location {
 
   @override
   int get hashCode => Object.hash(runtimeType, id, name, description, latitude,
-      longitude, photoPath, createdAt, updatedAt);
+      longitude, photoPath, placeName, createdAt, updatedAt);
 
   /// Create a copy of Location
   /// with the given fields replaced by the non-null parameter values.
@@ -264,6 +282,7 @@ abstract class _Location implements Location {
       required final double latitude,
       required final double longitude,
       final String? photoPath,
+      final String? placeName,
       final DateTime? createdAt,
       final DateTime? updatedAt}) = _$LocationImpl;
 
@@ -279,6 +298,8 @@ abstract class _Location implements Location {
   double get longitude;
   @override
   String? get photoPath;
+  @override
+  String? get placeName;
   @override
   DateTime? get createdAt;
   @override
